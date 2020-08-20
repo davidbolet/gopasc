@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/davidbolet/gopasc.git/pascal/v5/rpc/models"
+	"github.com/davidbolet/gopasc/pascal/v5/rpc/models"
 	"github.com/ybbus/jsonrpc"
 )
 
