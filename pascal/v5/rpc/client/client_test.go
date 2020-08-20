@@ -1,10 +1,11 @@
 package client
 
 import (
-	"github.com/stretchr/testify/suite"
+	"fmt"
 	"testing"
-)
 
+	"github.com/stretchr/testify/suite"
+)
 
 type TestSuite struct {
 	suite.Suite
@@ -30,4 +31,11 @@ func (s *TestSuite) TestGetAccountInvalidParam() {
 	account, err := s.pascalClient.GetAccount(-1)
 	s.Assert().Nil(err, "Error should be nil")
 	s.Assert().Nil(account, "Account should be nil")
+}
+
+func (s *TestSuite) TestNodeStatus() {
+	nodeStatus, err := s.pascalClient.NodeStatus()
+	fmt.Printf("%+v", nodeStatus)
+	s.Assert().Nil(err, "Error should be nil")
+	s.Assert().NotNil(nodeStatus, "NodeStatus should not be nil")
 }
