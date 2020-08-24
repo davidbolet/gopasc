@@ -127,3 +127,123 @@ func (client *PascalClient) GetWalletCoins(encPubkey *models.HexaString, b58Pubk
 	getwalletcoins = stringwalletcoins
 	return getwalletcoins, nil
 }
+
+//GetBlock Returns a JSON Object with a block information
+func (client *PascalClient) GetBlock(block int) (Block *models.Block, err error) {
+	resp, err := client.rpcClient.Call("getblock", map[string]interface{}{
+		"block": block,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = resp.GetObject(&Block)
+	return Block, nil
+}
+
+//GetBlocks Returns a JSON Array with blocks information from "start" to "end" (or "last" n blocks) Blocks are returned in DESCENDING order
+func (client *PascalClient) GetBlocks(start int, end int) (Block *[]models.Block, err error) {
+	resp, err := client.rpcClient.Call("getblocks", map[string]interface{}{
+		"start": start,
+		"end":   end,
+	})
+	if err != nil {
+		return nil, err
+	}
+	Block = &[]models.Block{}
+	err = resp.GetObject(&Block)
+	return Block, nil
+}
+
+// GetBlockCount Returns an Integer with blockcount of node
+func (client *PascalClient) GetBlockCount() (blockcount int, err error) {
+	resp, err := client.rpcClient.Call("getblockcount")
+	if err != nil {
+		return 1, nil
+	}
+	err = resp.GetObject(&blockcount)
+	return blockcount, nil
+}
+
+//GetBlockOperation Returns a JSON Object with an operation inside a block
+func (client *PascalClient) GetBlockOperation(block int, opblock int) (Operation *models.Operations, err error) {
+	resp, err := client.rpcClient.Call("getblockoperation", map[string]interface{}{
+		"block":   block,
+		"opblock": opblock,
+	})
+	if err != nil {
+		return nil, err
+	}
+	Operation = &models.Operations{}
+	err = resp.GetObject(Operation)
+	return Operation, nil
+}
+
+//GetBlockOperations Returns a JSON Array with all operations of specified block Operations are returned in DESCENDING order
+func (client *PascalClient) GetBlockOperations(block int, start int, max int) (Operations *[]models.Operations, err error) {
+	resp, err := client.rpcClient.Call("getblockoperations", map[string]interface{}{
+		"block": block,
+		"start": start,
+		"max":   max,
+	})
+	if err != nil {
+		return nil, err
+	}
+	Operations = &[]models.Operations{}
+	err = resp.GetObject(Operations)
+	return Operations, nil
+}
+
+//GetAccountOperations Return a JSON Array with "Operation Object" items. Operations made over an account Operations are returned in DESCENDING order
+func (client *PascalClient) GetAccountOperations(account int, depth int, start int, max int) (AccountOperations *[]models.Operations, err error) {
+	resp, err := client.rpcClient.Call("getaccountoperations", map[string]interface{}{
+		"account": account,
+		"depth":   depth,
+		"start":   start,
+		"max":     max,
+	})
+	if err != nil {
+		return nil, err
+	}
+	AccountOperations = &[]models.Operations{}
+	err = resp.GetObject(AccountOperations)
+	return AccountOperations, nil
+}
+
+//GetPendings Return a JSON Array with "Operation Object" items with operations pending to be included at the Blockchain.
+func (client *PascalClient) GetPendings(start int, max int) (pendings *[]models.Operations, err error) {
+	resp, err := client.rpcClient.Call("getpendings", map[string]interface{}{
+		"start": start,
+		"max":   max,
+	})
+	if err != nil {
+		return nil, err
+	}
+	pendings = &[]models.Operations{}
+	err = resp.GetObject(pendings)
+	return pendings, nil
+}
+
+// GetPendingsCount Return pending opertions count
+func (client *PascalClient) GetPendingsCount() (pendingsCount *models.Operations, err error) { //Doesn't display correctly
+	resp, err := client.rpcClient.Call("getpendingscount")
+	if err != nil {
+		return nil, err
+	}
+	err = resp.GetObject(&pendingsCount)
+	return pendingsCount, nil
+}
+
+// FindOperation Return a JSON Object in "Operation Object" format.
+func (client *PascalClient) FindOperation(ophash *models.HexaString) (operation *models.Operations, err error) {
+	resp, err := client.rpcClient.Call("findoperation", map[string]interface{}{
+		"ophash": ophash,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	operation = &models.Operations{}
+	err = resp.GetObject(operation)
+	return operation, nil
+}

@@ -103,3 +103,82 @@ func (s *TestSuite) TestGetWalletCoinsNonExistingKey() {
 	s.Assert().Equal(getwalletcoins, float64(0), "Coins must be 0")
 	s.Assert().NotNil(getwalletcoins, "A public key should be returned")
 }
+
+func (s *TestSuite) TestGetBlock() {
+	var block = 453489
+	getblock, err := s.pascalClient.GetBlock(block)
+	fmt.Printf("%+v", getblock)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestGetBlocks() {
+	//var last = 5
+	var start = 453486
+	var end = 453489
+	getblocks, err := s.pascalClient.GetBlocks(start, end)
+	fmt.Printf("%+v", getblocks)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestGetBlockCount() {
+	getblockcount, err := s.pascalClient.GetBlockCount()
+	fmt.Printf("%+v", getblockcount)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestGetBlockOperation() {
+	var block = 453486
+	var operationBlock = 0
+	getblockoperation, err := s.pascalClient.GetBlockOperation(block, operationBlock)
+	fmt.Printf("%+v", getblockoperation)
+	s.Assert().Nil(err, "Error has to be nil")
+
+}
+
+func (s *TestSuite) TestGetBlockOperations() {
+	var block = 453486
+	var start = 0
+	var max = 100
+
+	getblockoperations, err := s.pascalClient.GetBlockOperations(block, start, max)
+	fmt.Printf("%+v", getblockoperations)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestGetAccountOperations() {
+	var account = 0
+	var depth = 100
+	var start = 0
+	var max = 100
+
+	getaccountoperations, err := s.pascalClient.GetAccountOperations(account, depth, start, max)
+	fmt.Printf("%+v", getaccountoperations)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestGetPendings() {
+	var start = 0
+	var max = 100
+
+	getpendings, err := s.pascalClient.GetPendings(start, max)
+	if len(*getpendings) == 0 {
+		println("No pending operations")
+	} else {
+		fmt.Printf("%+v", getpendings)
+	}
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestGetPendingsCount() {
+	getpendingscount, err := s.pascalClient.GetPendingsCount()
+	fmt.Printf("%+v", getpendingscount)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestFindOperation() {
+	var ophash models.HexaString
+	ophash = "71EB0600C4810C0002000000A348E5B249B15AEB916679456B2D6C87F6CBB647"
+	findoperation, err := s.pascalClient.FindOperation(&ophash)
+	fmt.Printf("%+v", findoperation)
+	s.Assert().Nil(err, "Error has to be nil")
+}
