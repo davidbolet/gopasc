@@ -281,7 +281,7 @@ func (client *PascalClient) FindAccounts(name string, Acctype int, start int, ma
 }
 
 //SendTo Executes a transaction operation from "sender" to "target"
-func (client *PascalClient) SendTo(sender int, target int, amount float64, fee float64, payload models.HexaString, payloadMethod models.HexaString, pwd string) (operationInfo *models.Operations, err error) {
+func (client *PascalClient) SendTo(sender int, target int, amount float64, fee float64, payload models.HexaString, payloadMethod string, pwd string) (operationInfo *models.Operations, err error) {
 	var toSend = make(map[string]interface{})
 
 	toSend["sender"] = sender
@@ -306,7 +306,7 @@ func (client *PascalClient) SendTo(sender int, target int, amount float64, fee f
 }
 
 //ChangeKey Executes a change key operation, changing "account" public key for a new one.
-func (client *PascalClient) ChangeKey(account int, newEncPubkey *models.HexaString, newB58Pubkey *models.HexaString, fee float64, payload models.HexaString, payloadMethod models.HexaString, pwd string) (operationInfo *models.Operations, err error) {
+func (client *PascalClient) ChangeKey(account int, newEncPubkey *models.HexaString, newB58Pubkey *models.HexaString, fee float64, payload models.HexaString, payloadMethod string, pwd string) (operationInfo *models.Operations, err error) {
 	var toSend = make(map[string]interface{})
 
 	toSend["account"] = account
@@ -339,7 +339,7 @@ func (client *PascalClient) ChangeKey(account int, newEncPubkey *models.HexaStri
 }
 
 //ListAccountForSale Lists an account for sale (public or private).
-func (client *PascalClient) ListAccountForSale(accountTarget int, accountSigner int, price float64, sellerAccount int, newEncPubkey *models.HexaString, newB58Pubkey *models.HexaString, fee float64, payload models.HexaString, payloadMethod models.HexaString, lockedUntilBlock int, pwd string) (operationInfo *models.Operations, err error) {
+func (client *PascalClient) ListAccountForSale(accountTarget int, accountSigner int, price float64, sellerAccount int, newEncPubkey *models.HexaString, newB58Pubkey *models.HexaString, fee float64, payload models.HexaString, payloadMethod string, lockedUntilBlock int, pwd string) (operationInfo *models.Operations, err error) {
 	var toSend = make(map[string]interface{})
 
 	toSend["account_target"] = accountTarget
@@ -376,7 +376,7 @@ func (client *PascalClient) ListAccountForSale(accountTarget int, accountSigner 
 }
 
 //DelistAccountForSale Delist an account for sale.
-func (client *PascalClient) DelistAccountForSale(accountTarget int, accountSigner int, fee float64, payload models.HexaString, payloadMethod models.HexaString, pwd string) (operationInfo *models.Operations, err error) {
+func (client *PascalClient) DelistAccountForSale(accountTarget int, accountSigner int, fee float64, payload models.HexaString, payloadMethod string, pwd string) (operationInfo *models.Operations, err error) {
 	var toSend = make(map[string]interface{})
 
 	toSend["account_target"] = accountTarget
@@ -398,4 +398,479 @@ func (client *PascalClient) DelistAccountForSale(accountTarget int, accountSigne
 	operationInfo = &models.Operations{}
 	err = resp.GetObject(operationInfo)
 	return operationInfo, err
+}
+
+//BuyAccount Buy an account previously listed for sale (public or private).
+func (client *PascalClient) BuyAccount(buyerAccount int, accountToPurchase int, price float64, sellerAccount int, newEncPubkey *models.HexaString, newB58Pubkey *models.HexaString, amount float64, fee float64, payload models.HexaString, payloadMethod string, pwd string) (operationInfo *models.Operations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["buyer_account"] = buyerAccount
+	toSend["account_to_purchase"] = accountToPurchase
+	toSend["price"] = price
+	toSend["seller_account"] = sellerAccount
+	if newEncPubkey != nil {
+		toSend["new_enc_pubkey"] = newEncPubkey
+
+	}
+
+	if newB58Pubkey != nil {
+		toSend["new_b58_pubkey"] = newB58Pubkey
+
+	}
+	toSend["amount"] = amount
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+
+	resp, err := client.rpcClient.Call("buyaccount", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	operationInfo = &models.Operations{}
+	err = resp.GetObject(operationInfo)
+	return operationInfo, err
+}
+
+//ChangeAccountInfo Signs a change account info for cold cold wallets.
+func (client *PascalClient) ChangeAccountInfo(accountTarget int, accountSigner int, newEncPubkey *models.HexaString, newB58Pubkey *models.HexaString, newName string, newType int, fee float64, payload models.HexaString, payloadMethod string, pwd string) (operationInfo *models.Operations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["account_target"] = accountTarget
+	toSend["account_signer"] = accountSigner
+	if newEncPubkey != nil {
+		toSend["new_enc_pubkey"] = newEncPubkey
+
+	}
+
+	if newB58Pubkey != nil {
+		toSend["new_b58_pubkey"] = newB58Pubkey
+
+	}
+
+	if newName != "" {
+		toSend["new_name"] = newName
+
+	}
+
+	if newType != 0 {
+		toSend["new_type"] = newType
+
+	}
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+
+	resp, err := client.rpcClient.Call("changeaccountinfo", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	operationInfo = &models.Operations{}
+	err = resp.GetObject(operationInfo)
+	return operationInfo, err
+}
+
+//SignSendTo Creates and signs a "Send to" operation without checking information and without transfering to the network. It's usefull for "cold wallets" that are off-line (not synchronized with the network) and only holds private keys
+func (client *PascalClient) SignSendTo(rawOperations *models.HexaString, sender int, target int, SenderEncPubkey *models.HexaString, SenderB58Pubkey *models.HexaString, TargetEncPubkey *models.HexaString, TargetB58Pubkey *models.HexaString, lastNOperation int, amount float64, fee float64, payload models.HexaString, payloadMethod string, pwd string) (rawOperationInfo *models.RawOperations, err error) {
+	var toSend = make(map[string]interface{})
+
+	if rawOperations != nil {
+		toSend["rawoperations"] = rawOperations
+
+	}
+
+	toSend["sender"] = sender
+	toSend["target"] = target
+
+	if SenderEncPubkey != nil {
+		toSend["sender_enc_pubkey"] = SenderEncPubkey
+
+	}
+	if SenderB58Pubkey != nil {
+		toSend["sender_b58_pubkey"] = SenderB58Pubkey
+
+	}
+	if TargetEncPubkey != nil {
+		toSend["target_enc_pubkey"] = TargetEncPubkey
+
+	}
+	if TargetB58Pubkey != nil {
+		toSend["target_b58_pubkey"] = TargetB58Pubkey
+
+	}
+
+	toSend["last_n_operation"] = lastNOperation
+	toSend["amount"] = amount
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+
+	resp, err := client.rpcClient.Call("signsendto", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rawOperationInfo = &models.RawOperations{}
+	err = resp.GetObject(rawOperationInfo)
+	return rawOperationInfo, err
+}
+
+//SignChangeKey Creates and signs a "Change key" operation without checking information and without transfering to the network. It's usefull for "cold wallets" that are off-line (not synchronized with the network) and only holds private keys
+func (client *PascalClient) SignChangeKey(rawOperations *models.HexaString, account int, OldEncPubkey *models.HexaString, OldB58Pubkey *models.HexaString, NewEncPubkey *models.HexaString, NewB58Pubkey *models.HexaString, lastNOperation int, amount float64, fee float64, payload models.HexaString, payloadMethod string, pwd string) (rawOperationInfo *models.RawOperations, err error) {
+	var toSend = make(map[string]interface{})
+
+	if rawOperations != nil {
+		toSend["rawoperations"] = rawOperations
+
+	}
+
+	toSend["account"] = account
+	if OldEncPubkey != nil {
+		toSend["old_enc_pubkey"] = OldEncPubkey
+
+	}
+	if OldB58Pubkey != nil {
+		toSend["old_b58_pubkey"] = OldB58Pubkey
+
+	}
+	if NewEncPubkey != nil {
+		toSend["new_enc_pubkey"] = NewEncPubkey
+
+	}
+	if NewB58Pubkey != nil {
+		toSend["new_b58_pubkey"] = NewB58Pubkey
+
+	}
+
+	toSend["last_n_operation"] = lastNOperation
+	toSend["amount"] = amount
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+
+	resp, err := client.rpcClient.Call("signchangekey", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rawOperationInfo = &models.RawOperations{}
+	err = resp.GetObject(rawOperationInfo)
+	return rawOperationInfo, err
+}
+
+//SignListAccountForSale Signs a List Account For Sale operation useful for offline, cold wallets.
+func (client *PascalClient) SignListAccountForSale(accountTarget int, accountSigner int, price int, sellerAccount int, NewEncPubkey *models.HexaString, NewB58Pubkey *models.HexaString, lockedUntilBlock int, fee float64, payload models.HexaString, payloadMethod string, pwd string) (rawOperationInfo *models.RawOperations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["account_target"] = accountTarget
+	toSend["account_signer"] = accountSigner
+	toSend["price"] = price
+	toSend["seller_account"] = sellerAccount
+
+	if NewEncPubkey != nil {
+		toSend["new_enc_pubkey"] = NewEncPubkey
+
+	}
+	if NewB58Pubkey != nil {
+		toSend["new_b58_pubkey"] = NewB58Pubkey
+
+	}
+
+	toSend["locked_until_block"] = lockedUntilBlock
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+
+	resp, err := client.rpcClient.Call("signlistaccountforsale", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rawOperationInfo = &models.RawOperations{}
+	err = resp.GetObject(rawOperationInfo)
+	return rawOperationInfo, err
+}
+
+//SignDelistAccountForSale  Signs a List an account for sale (public or private) for cold wallets
+func (client *PascalClient) SignDelistAccountForSale(rawOperations *models.HexaString, signerB58Pubkey *models.HexaString, signerEncPubkey *models.HexaString, lastNoperation int) (rawOperationInfo *models.RawOperations, err error) {
+	var toSend = make(map[string]interface{})
+
+	if rawOperations != nil {
+		toSend["rawoperations"] = rawOperations
+	}
+
+	if signerB58Pubkey != nil {
+		toSend["signer_b58_pubkey"] = signerB58Pubkey
+
+	}
+	if signerEncPubkey != nil {
+		toSend["signer_enc_pubkey"] = signerEncPubkey
+
+	}
+
+	resp, err := client.rpcClient.Call("signdelistaccountforsale", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rawOperationInfo = &models.RawOperations{}
+	err = resp.GetObject(rawOperationInfo)
+	return rawOperationInfo, err
+}
+
+//SignBuyAccount Signs a buy operation for cold wallets.
+func (client *PascalClient) SignBuyAccount(buyerAccount int, accountToPurchase int, price float64, sellerAccount int, newB58Pubkey *models.HexaString, newEncPubkey *models.HexaString, amount float64, fee float64, payload models.HexaString, payloadMethod string, pwd string, signerB58Pubkey *models.HexaString, signerEncPubkey *models.HexaString, lastNoperation int) (rawOperationInfo *models.RawOperations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["buyer_account"] = buyerAccount
+	toSend["account_to_purchase"] = accountToPurchase
+	toSend["price"] = price
+	toSend["seller_account"] = sellerAccount
+
+	if newB58Pubkey != nil {
+		toSend["new_b58_pubkey"] = newB58Pubkey
+	}
+
+	if newEncPubkey != nil {
+		toSend["new_enc_pubkey"] = newEncPubkey
+
+	}
+
+	toSend["amount"] = amount
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+	toSend["pwd"] = fee
+
+	if signerB58Pubkey != nil {
+		toSend["signer_b58_pubkey"] = signerB58Pubkey
+
+	}
+	if signerEncPubkey != nil {
+		toSend["signer_enc_pubkey"] = signerEncPubkey
+
+	}
+
+	toSend["last_n_operation"] = lastNoperation
+
+	resp, err := client.rpcClient.Call("signbuyaccount", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rawOperationInfo = &models.RawOperations{}
+	err = resp.GetObject(rawOperationInfo)
+	return rawOperationInfo, err
+}
+
+//SignChangeAccountInfo Signs a change account info for cold cold wallets.
+func (client *PascalClient) SignChangeAccountInfo(accountTarget int, accountSigner int, newEncPubkey *models.HexaString, newB58Pubkey *models.HexaString, newName string, newType int, fee float64, payload models.HexaString, payloadMethod string, pwd string, rawoperations *models.HexaString, signerEncPubkey *models.HexaString, signerB58Pubkey *models.HexaString, lastNoperation int) (operationInfo *models.RawOperations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["account_target"] = accountTarget
+	toSend["account_signer"] = accountSigner
+	if newEncPubkey != nil {
+		toSend["new_enc_pubkey"] = newEncPubkey
+
+	}
+
+	if newB58Pubkey != nil {
+		toSend["new_b58_pubkey"] = newB58Pubkey
+
+	}
+
+	if newName != "" {
+		toSend["new_name"] = newName
+
+	}
+
+	if newType != 0 {
+		toSend["new_type"] = newType
+
+	}
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+
+	if rawoperations != nil {
+		toSend["rawoperations"] = rawoperations
+
+	}
+
+	if signerEncPubkey != nil {
+		toSend["signer_enc_pubkey"] = signerEncPubkey
+
+	}
+
+	if signerB58Pubkey != nil {
+		toSend["signer_b58_pubkey"] = signerB58Pubkey
+
+	}
+
+	toSend["last_n_operation"] = lastNoperation
+
+	resp, err := client.rpcClient.Call("signchangeaccountinfo", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	operationInfo = &models.RawOperations{}
+	err = resp.GetObject(operationInfo)
+	return operationInfo, err
+}
+
+//OperationsInfo Returns information stored in a rawoperations param (obtained calling signchangekey or signsendto)
+func (client *PascalClient) OperationsInfo(rawoperations *models.HexaString) (operationInfo *[]models.Operations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["rawoperations"] = rawoperations
+
+	resp, err := client.rpcClient.Call("operationsinfo", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	operationInfo = &[]models.Operations{}
+	err = resp.GetObject(operationInfo)
+	return operationInfo, err
+}
+
+//ExecuteOperations Executes operations included in rawopertions param and transfers to the network. Raw operations can include "Send to" oprations or "Change key" operations.
+func (client *PascalClient) ExecuteOperations(rawoperations *models.HexaString) (operationInfo *[]models.Operations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["rawoperations"] = rawoperations
+
+	resp, err := client.rpcClient.Call("executeoperations", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	operationInfo = &[]models.Operations{}
+	err = resp.GetObject(operationInfo)
+	return operationInfo, err
+}
+
+// NODE STATUS?????
+
+//EncondePubkey Encodes a public key based on params information
+func (client *PascalClient) EncondePubkey(ecNid int, x models.HexaString, y models.HexaString) (encondedKey *models.HexaString, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["ec_nid"] = ecNid
+	toSend["x"] = x
+	toSend["y"] = y
+
+	resp, err := client.rpcClient.Call("encondepubkey", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = resp.GetObject(encondedKey)
+	return encondedKey, err
+}
+
+//DecodePubkey Decodes an encoded public key
+func (client *PascalClient) DecodePubkey(encPubkey *models.HexaString, b58Pubkey *models.HexaString) (decodedKey *models.PublicKey, err error) {
+	var toSend = make(map[string]interface{})
+
+	if encPubkey != nil {
+		toSend["enc_pubkey"] = encPubkey
+	}
+
+	if b58Pubkey != nil {
+		toSend["b58_pubkey"] = b58Pubkey
+	}
+
+	resp, err := client.rpcClient.Call("decodepubkey", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = resp.GetObject(decodedKey)
+	return decodedKey, err
+}
+
+//PayloadEncrypt Encrypt a text "paylad" using "payload_method"
+func (client *PascalClient) PayloadEncrypt(payload models.HexaString, payloadMethod string, encPubkey *models.HexaString, b58Pubkey *models.HexaString, pwd string) (payloadEncrypted *models.HexaString, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if encPubkey != nil {
+		toSend["enc_pubkey"] = encPubkey
+	}
+
+	if b58Pubkey != nil {
+		toSend["b58_pubkey"] = b58Pubkey
+	}
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+	resp, err := client.rpcClient.Call("payloadencrypt", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	stringEncrypted, err := resp.GetString()
+	payloadEncrypted1 := models.HexaString(stringEncrypted)
+	return &payloadEncrypted1, err
+}
+
+//PayloadDecrypt Returns a HEXASTRING with decrypted text (a payload) using private keys in the wallet or a list of Passwords (used in "aes" encryption)
+func (client *PascalClient) PayloadDecrypt(payload models.HexaString, pwds []string) (payloadDecrypt *models.DecryptResult, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["payload"] = payload
+	toSend["pwds"] = pwds
+
+	resp, err := client.rpcClient.Call("payloaddecrypt", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	payloadDecrypt = &models.DecryptResult{}
+	err = resp.GetObject(payloadDecrypt)
+	return payloadDecrypt, err
 }
