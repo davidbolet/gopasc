@@ -152,7 +152,7 @@ func (s *TestSuite) TestGetAccountOperations() {
 	var max = 100
 
 	getaccountoperations, err := s.pascalClient.GetAccountOperations(account, depth, start, max)
-	fmt.Printf("%+v", getaccountoperations)
+	fmt.Printf("%+v", *getaccountoperations)
 	s.Assert().Nil(err, "Error has to be nil")
 }
 
@@ -164,7 +164,7 @@ func (s *TestSuite) TestGetPendings() {
 	if len(*getpendings) == 0 {
 		println("No pending operations")
 	} else {
-		fmt.Printf("%+v", getpendings)
+		fmt.Printf("%+v", *getpendings)
 	}
 	s.Assert().Nil(err, "Error has to be nil")
 }
@@ -179,6 +179,76 @@ func (s *TestSuite) TestFindOperation() {
 	var ophash models.HexaString
 	ophash = "71EB0600C4810C0002000000A348E5B249B15AEB916679456B2D6C87F6CBB647"
 	findoperation, err := s.pascalClient.FindOperation(&ophash)
-	fmt.Printf("%+v", findoperation)
+	fmt.Printf("%+v", *findoperation)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestFindAccounts() {
+	name := "atreides"
+	start := 0
+	max := 100
+	exact := true
+	var minBalance float64 = 1
+	var maxBalance float64 = 132
+	//var encPubkey models.HexaString = s.myEncPubkey
+	//var b58Pubkey *models.HexaString
+	foundAccounts, err := s.pascalClient.FindAccounts(name, start, 0, max, exact, minBalance, maxBalance, nil, &s.myB58Key)
+	fmt.Printf("%+v", *foundAccounts)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestSendTo() {
+	sender := 819652
+	target := 1104984
+	var amount float64 = 0.01
+	var fee float64 = 0.0001
+	var payload models.HexaString = ""
+	var payloadMethod models.HexaString = "dest"
+	pwd := ""
+
+	sendTo, err := s.pascalClient.SendTo(sender, target, amount, fee, payload, payloadMethod, pwd)
+	fmt.Printf("%+v", *sendTo)
+	s.Assert().Nil(err, "Error has to be nil")
+
+}
+
+func (s *TestSuite) TestChangeKey() {
+	account := 1104984
+	//newEncPubkey := ""
+	var newB58Pubkey models.HexaString = "3GhhbonsfmKwoT4iCgjgqNbmPi7u9CWuZPBW9jboar96Ljz3Wnfpvun9tYaNmerrrGu9n4CehDTStCZAUQ7whdKpnb4yupkwWQNfcu"
+	fee := 0.0001
+	var payload models.HexaString = "test"
+	var payloadMethod models.HexaString = "dest"
+	pwd := ""
+	ChangeKey, err := s.pascalClient.ChangeKey(account, nil, &newB58Pubkey, fee, payload, payloadMethod, pwd)
+	fmt.Printf("%+v", *ChangeKey)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestListAccountForSale() {
+	accountTarget := 1104984
+	accountSigner := 1104984
+	price := 2000.0
+	sellerAccount := 819652
+	//var newB58Pubkey models.HexaString = "3GhhbonsfmKwoT4iCgjgqNbmPi7u9CWuZPBW9jboar96Ljz3Wnfpvun9tYaNmerrrGu9n4CehDTStCZAUQ7whdKpnb4yupkwWQNfcu"
+	lockedUntilBlock := 454662
+	fee := 0.0001
+	var payload models.HexaString = "test"
+	var payloadMethod models.HexaString = "dest"
+	pwd := ""
+	AccoutForSale, err := s.pascalClient.ListAccountForSale(accountTarget, accountSigner, price, sellerAccount, nil, nil, fee, payload, payloadMethod, lockedUntilBlock, pwd)
+	fmt.Printf("%+v", *AccoutForSale)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestDelistAccountForSale() {
+	accountTarget := 1104984
+	accountSigner := 1104984
+	fee := 0.0001
+	var payload models.HexaString = "test"
+	var payloadMethod models.HexaString = "dest"
+	pwd := ""
+	AccountForDelist, err := s.pascalClient.DelistAccountForSale(accountTarget, accountSigner, fee, payload, payloadMethod, pwd)
+	fmt.Printf("%+v", *AccountForDelist)
 	s.Assert().Nil(err, "Error has to be nil")
 }

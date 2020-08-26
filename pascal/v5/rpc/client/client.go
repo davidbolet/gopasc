@@ -221,7 +221,7 @@ func (client *PascalClient) GetPendings(start int, max int) (pendings *[]models.
 	}
 	pendings = &[]models.Operations{}
 	err = resp.GetObject(pendings)
-	return pendings, nil
+	return pendings, err
 }
 
 // GetPendingsCount Return pending opertions count
@@ -246,4 +246,156 @@ func (client *PascalClient) FindOperation(ophash *models.HexaString) (operation 
 	operation = &models.Operations{}
 	err = resp.GetObject(operation)
 	return operation, nil
+}
+
+//FindAccounts Find accounts by name/type and returns them as an array of "Account Object"
+func (client *PascalClient) FindAccounts(name string, Acctype int, start int, max int, exact bool, minBalance float64, maxBalance float64, encPubkey *models.HexaString, b58Pubkey *models.HexaString) (FoundAccounts *[]models.Account, err error) {
+
+	var toSend = make(map[string]interface{})
+
+	if name != "" {
+		toSend["name"] = name
+	}
+	toSend["Acctype"] = Acctype
+	toSend["start"] = start
+	toSend["max"] = max
+	if exact {
+		toSend["exact"] = exact
+	}
+	if minBalance != 0 {
+		toSend["min_balance"] = minBalance
+	}
+	if maxBalance != 0 {
+		toSend["max_balance"] = maxBalance
+	}
+	if encPubkey != nil {
+		toSend["enc_pubkey"] = *encPubkey
+	}
+	if b58Pubkey != nil {
+		toSend["b58_pubkey"] = *b58Pubkey
+	}
+	resp, err := client.rpcClient.Call("findaccounts", toSend)
+	FoundAccounts = &[]models.Account{}
+	err = resp.GetObject(FoundAccounts)
+	return FoundAccounts, nil
+}
+
+//SendTo Executes a transaction operation from "sender" to "target"
+func (client *PascalClient) SendTo(sender int, target int, amount float64, fee float64, payload models.HexaString, payloadMethod models.HexaString, pwd string) (operationInfo *models.Operations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["sender"] = sender
+	toSend["target"] = target
+	toSend["amount"] = amount
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.rpcClient.Call("sendto", toSend)
+
+	operationInfo = &models.Operations{}
+	err = resp.GetObject(operationInfo)
+	return operationInfo, err
+}
+
+//ChangeKey Executes a change key operation, changing "account" public key for a new one.
+func (client *PascalClient) ChangeKey(account int, newEncPubkey *models.HexaString, newB58Pubkey *models.HexaString, fee float64, payload models.HexaString, payloadMethod models.HexaString, pwd string) (operationInfo *models.Operations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["account"] = account
+	if newEncPubkey != nil {
+		toSend["new_enc_pubkey"] = newEncPubkey
+
+	}
+
+	if newB58Pubkey != nil {
+		toSend["new_b58_pubkey"] = newB58Pubkey
+
+	}
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+
+	resp, err := client.rpcClient.Call("changekey", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	operationInfo = &models.Operations{}
+	err = resp.GetObject(operationInfo)
+	return operationInfo, err
+}
+
+//ListAccountForSale Lists an account for sale (public or private).
+func (client *PascalClient) ListAccountForSale(accountTarget int, accountSigner int, price float64, sellerAccount int, newEncPubkey *models.HexaString, newB58Pubkey *models.HexaString, fee float64, payload models.HexaString, payloadMethod models.HexaString, lockedUntilBlock int, pwd string) (operationInfo *models.Operations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["account_target"] = accountTarget
+	toSend["account_signer"] = accountSigner
+	toSend["price"] = price
+	toSend["seller_account"] = sellerAccount
+	if newEncPubkey != nil {
+		toSend["new_enc_pubkey"] = newEncPubkey
+
+	}
+
+	if newB58Pubkey != nil {
+		toSend["new_b58_pubkey"] = newB58Pubkey
+
+	}
+	toSend["locked_until_block"] = lockedUntilBlock
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+
+	resp, err := client.rpcClient.Call("listaccountforsale", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	operationInfo = &models.Operations{}
+	err = resp.GetObject(operationInfo)
+	return operationInfo, err
+}
+
+//DelistAccountForSale Delist an account for sale.
+func (client *PascalClient) DelistAccountForSale(accountTarget int, accountSigner int, fee float64, payload models.HexaString, payloadMethod models.HexaString, pwd string) (operationInfo *models.Operations, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["account_target"] = accountTarget
+	toSend["account_signer"] = accountSigner
+	toSend["fee"] = fee
+	toSend["payload"] = payload
+	toSend["payload_method"] = payloadMethod
+
+	if payloadMethod == "aes" {
+		toSend["pwd"] = pwd
+	}
+
+	resp, err := client.rpcClient.Call("delistaccountforsale", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	operationInfo = &models.Operations{}
+	err = resp.GetObject(operationInfo)
+	return operationInfo, err
 }
