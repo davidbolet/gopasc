@@ -646,7 +646,7 @@ func (client *PascalClient) SignDelistAccountForSale(rawOperations *models.HexaS
 }
 
 //SignBuyAccount Signs a buy operation for cold wallets.
-func (client *PascalClient) SignBuyAccount(buyerAccount int, accountToPurchase int, price float64, sellerAccount int, newB58Pubkey *models.HexaString, newEncPubkey *models.HexaString, amount float64, fee float64, payload models.HexaString, payloadMethod string, pwd string, signerB58Pubkey *models.HexaString, signerEncPubkey *models.HexaString, lastNoperation int) (rawOperationInfo *models.RawOperations, err error) {
+func (client *PascalClient) SignBuyAccount(buyerAccount int, accountToPurchase int, price float64, sellerAccount int, newEncPubkey *models.HexaString, newB58Pubkey *models.HexaString, amount float64, fee float64, payload models.HexaString, payloadMethod string, pwd string, signerEncPubkey *models.HexaString, signerB58Pubkey *models.HexaString, lastNoperation int) (rawOperationInfo *models.RawOperations, err error) {
 	var toSend = make(map[string]interface{})
 
 	toSend["buyer_account"] = buyerAccount
@@ -802,7 +802,7 @@ func (client *PascalClient) EncondePubkey(ecNid int, x models.HexaString, y mode
 		return nil, err
 	}
 
-	err = resp.GetObject(encondedKey)
+	err = resp.GetObject(&encondedKey)
 	return encondedKey, err
 }
 
@@ -824,12 +824,12 @@ func (client *PascalClient) DecodePubkey(encPubkey *models.HexaString, b58Pubkey
 		return nil, err
 	}
 
-	err = resp.GetObject(decodedKey)
+	err = resp.GetObject(&decodedKey)
 	return decodedKey, err
 }
 
 //PayloadEncrypt Encrypt a text "paylad" using "payload_method"
-func (client *PascalClient) PayloadEncrypt(payload models.HexaString, payloadMethod string, encPubkey *models.HexaString, b58Pubkey *models.HexaString, pwd string) (payloadEncrypted *models.HexaString, err error) {
+func (client *PascalClient) PayloadEncrypt(payload string, payloadMethod string, encPubkey *models.HexaString, b58Pubkey *models.HexaString, pwd string) (payloadEncrypted *models.HexaString, err error) {
 	var toSend = make(map[string]interface{})
 
 	toSend["payload"] = payload
@@ -858,7 +858,7 @@ func (client *PascalClient) PayloadEncrypt(payload models.HexaString, payloadMet
 }
 
 //PayloadDecrypt Returns a HEXASTRING with decrypted text (a payload) using private keys in the wallet or a list of Passwords (used in "aes" encryption)
-func (client *PascalClient) PayloadDecrypt(payload models.HexaString, pwds []string) (payloadDecrypt *models.DecryptResult, err error) {
+func (client *PascalClient) PayloadDecrypt(payload string, pwds []string) (payloadDecrypt *models.DecryptResult, err error) {
 	var toSend = make(map[string]interface{})
 
 	toSend["payload"] = payload
@@ -873,4 +873,124 @@ func (client *PascalClient) PayloadDecrypt(payload models.HexaString, pwds []str
 	payloadDecrypt = &models.DecryptResult{}
 	err = resp.GetObject(payloadDecrypt)
 	return payloadDecrypt, err
+}
+
+//GetConnections Returns a JSON Array with Connection Objects
+func (client *PascalClient) GetConnections() (connections *[]models.Connection, err error) {
+
+	resp, err := client.rpcClient.Call("getconnections")
+
+	if err != nil {
+		return nil, err
+	}
+
+	connections = &[]models.Connection{}
+	err = resp.GetObject(connections)
+	return connections, err
+}
+
+//AddNewKey Creates a new Private key and sotres it on the wallet, returning an enc_pubkey value
+func (client *PascalClient) AddNewKey(ecNid int, name string) (newKey *models.PublicKey, err error) {
+	var toSend = make(map[string]interface{})
+
+	toSend["ec_nid"] = ecNid
+	toSend["name"] = name
+
+	resp, err := client.rpcClient.Call("addnewkey", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+	newKey = &models.PublicKey{}
+	err = resp.GetObject(newKey)
+	return newKey, err
+}
+
+//Lock Locks the Wallet if it has a password, otherwise wallet cannot be locked
+func (client *PascalClient) Lock() (locked bool, err error) {
+
+	resp, err := client.rpcClient.Call("lock")
+
+	locked, err = resp.GetBool()
+	return locked, err
+}
+
+//UnLock Unlocks a locked Wallet using "pwd" param
+func (client *PascalClient) UnLock(pwd string) (locked bool, err error) {
+	var toSend = make(map[string]interface{})
+	toSend["pwd"] = pwd
+	resp, err := client.rpcClient.Call("unlock", toSend)
+
+	locked, err = resp.GetBool()
+	return locked, err
+}
+
+//SetWalletPassword Changes the password of the Wallet. (Must be previously unlocked) Note: If pwd param is empty string, then wallet will be not protected by password
+func (client *PascalClient) SetWalletPassword(pwd string) (newPassword bool, err error) {
+	var toSend = make(map[string]interface{})
+	toSend["pwd"] = pwd
+	resp, err := client.rpcClient.Call("setwalletpassword", toSend)
+
+	newPassword, err = resp.GetBool()
+	return newPassword, err
+}
+
+//StopNode Stops the node and the server. Closes all connections
+func (client *PascalClient) StopNode() (nodeStop bool, err error) {
+
+	resp, err := client.rpcClient.Call("stopnode")
+
+	nodeStop, err = resp.GetBool()
+	return nodeStop, err
+}
+
+//StartNode Starts the node and the server. Starts connection process
+func (client *PascalClient) StartNode() (nodeStart bool, err error) {
+
+	resp, err := client.rpcClient.Call("startnode")
+
+	nodeStart, err = resp.GetBool()
+	return nodeStart, err
+}
+
+//SignMessage Signs a digest message using a public key
+func (client *PascalClient) SignMessage(digest string, encPubkey *models.HexaString, b58Pubkey *models.HexaString) (ToRecieve map[string]models.HexaString, err error) {
+	var toSend = make(map[string]interface{})
+	toSend["digest"] = digest
+
+	if encPubkey != nil {
+		toSend["enc_pubkey"] = *encPubkey
+	}
+
+	if b58Pubkey != nil {
+		toSend["b58_pubkey"] = *b58Pubkey
+	}
+
+	resp, err := client.rpcClient.Call("signmessage", toSend)
+	var toReceive = make(map[string]models.HexaString)
+
+	err = resp.GetObject(&toReceive)
+	return toReceive, err
+}
+
+//VerifySign Verify if a digest message is signed by a public key
+func (client *PascalClient) VerifySign(digest string, encPubkey *models.HexaString, b58Pubkey *models.HexaString, signature models.HexaString) (receive map[string]models.HexaString, err error) {
+	var toSend = make(map[string]interface{})
+	toSend["digest"] = digest
+
+	if encPubkey != nil {
+		toSend["enc_pubkey"] = *encPubkey
+	}
+
+	if b58Pubkey != nil {
+		toSend["b58_pubkey"] = *b58Pubkey
+	}
+
+	toSend["signature"] = signature
+
+	resp, err := client.rpcClient.Call("verifysign", toSend)
+
+	var toReceive = make(map[string]models.HexaString)
+	err = resp.GetObject(&toReceive)
+	return toReceive, err
 }

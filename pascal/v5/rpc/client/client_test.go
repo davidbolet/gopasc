@@ -1,6 +1,7 @@
 package client
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -358,67 +359,157 @@ func (s *TestSuite) TestSignDelistAccountForSale() {
 }
 
 func (s *TestSuite) TestSignBuyAccount() {
-	buyerAccount := 123
-	accountToPurchase := 1104984
+	buyerAccount := 819652
+	accountToPurchase := 1077004
 	price := 0.0001
-	sellerAccount := 42
+	sellerAccount := 3532
 	//var newEncPubkey models.HexaString = "test"
-	var newB58Pubkey models.HexaString = "dest"
+	var newB58Pubkey models.HexaString = s.myB58Key
 	var amount float64 = 0.0001
-	var fee float64 = 0.00001
-	var payload models.HexaString = "asdsa"
+	var fee float64 = 0
+	var payload models.HexaString = "Test Test Test"
 	payloadMethod := "dest"
 	pwd := ""
 
 	//var signerEncPubkey models.HexaString = "test"
-	var signerB58Pubkey models.HexaString = "dest"
-	lastNoperation := 13
+	var signerB58Pubkey models.HexaString = s.myB58Key
+	lastNoperation := 5
 	BuyAccount, err := s.pascalClient.SignBuyAccount(buyerAccount, accountToPurchase, price, sellerAccount, nil, &newB58Pubkey, amount, fee, payload, payloadMethod, pwd, nil, &signerB58Pubkey, lastNoperation)
 	fmt.Printf("%+v", *BuyAccount)
 	s.Assert().Nil(err, "Error has to be nil")
 }
 
 func (s *TestSuite) TestOperationsInfo() {
-	var rawoperations models.HexaString = "asdsad"
+	var rawoperations models.HexaString = "0100000006000500C4810C00060000000C6F100001000000000000000000000000000000004700211007001000025FB53B6721558180EFC6C9277FE0132B2C6A390834FD231CAF11D8EE9655F9417027E82DCFC3C57A601CC17B3CED821C6229CBDD96DA4A6542D26787CADAE95C000000000000020100000000000000CC0D0000CA022000A436D45ADEBFC40AE7899339BF37C28CDAD29AF7B516A2E4A250471F484B2EA52000F0940F383942D8E1003CDA543381C21AC38BAE264B4E4BC98680ED7A1EDFD8AC200060907C68DC89D10E950E2052D7F5C2FE785ABD30220D4C5BFB43BC27E8DC7F2020009A4CDCED005817A0B76343BB4CDAD15C7D648508881BD17BEDEDB1061FBC6447"
 	opInfo, err := s.pascalClient.OperationsInfo(&rawoperations)
 	fmt.Printf("%+v", *opInfo)
 	s.Assert().Nil(err, "Error has to be nil")
 }
 
+func (s *TestSuite) TestExecuteOperations() {
+	var rawoperations models.HexaString = "0100000006000500C4810C00060000000C6F100001000000000000000000000000000000004700211007001000025FB53B6721558180EFC6C9277FE0132B2C6A390834FD231CAF11D8EE9655F9417027E82DCFC3C57A601CC17B3CED821C6229CBDD96DA4A6542D26787CADAE95C000000000000020100000000000000CC0D0000CA022000A436D45ADEBFC40AE7899339BF37C28CDAD29AF7B516A2E4A250471F484B2EA52000F0940F383942D8E1003CDA543381C21AC38BAE264B4E4BC98680ED7A1EDFD8AC200060907C68DC89D10E950E2052D7F5C2FE785ABD30220D4C5BFB43BC27E8DC7F2020009A4CDCED005817A0B76343BB4CDAD15C7D648508881BD17BEDEDB1061FBC6447"
+	opExecute, err := s.pascalClient.ExecuteOperations(&rawoperations)
+	fmt.Printf("%+v", *opExecute)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
 func (s *TestSuite) TestEncondePubkey() {
 	ecNid := 714
-	var x models.HexaString = "saffs"
-	var y models.HexaString = "sass"
+	var x models.HexaString = "A436D45ADEBFC40AE7899339BF37C28CDAD29AF7B516A2E4A250471F484B2EA5"
+	var y models.HexaString = "F0940F383942D8E1003CDA543381C21AC38BAE264B4E4BC98680ED7A1EDFD8AC"
 	encondePubkey, err := s.pascalClient.EncondePubkey(ecNid, x, y)
-	fmt.Printf("%+v", *encondePubkey)
+	fmt.Printf("%+v", &encondePubkey)
 	s.Assert().Nil(err, "Error has to be nil")
 }
 
 func (s *TestSuite) TestDecodePubkey() {
 	//var encPubkey models.HexaString = "AFSS"
-	var b58Pubkey models.HexaString = "AFSS"
+	var b58Pubkey models.HexaString = s.myB58Key
 	decodePubkey, err := s.pascalClient.DecodePubkey(nil, &b58Pubkey)
 	fmt.Printf("%+v", *decodePubkey)
 	s.Assert().Nil(err, "Error has to be nil")
 }
 
 func (s *TestSuite) TestPayloadEncrypt() {
-	var payload models.HexaString = "test"
 	payloadMethod := "aes"
-	//var encPubkey models.HexaString = "AFSS"
-	var b58Pubkey models.HexaString = s.myB58Key
+	src := []byte("DODO")
+
+	//res := make([]byte, hex.EncodedLen(len(src)))
+	//hex.Encode(res, src)
+
+	digest := hex.EncodeToString(src)
 	pwd := "1234"
 
-	decodePubkey, err := s.pascalClient.PayloadEncrypt(payload, payloadMethod, nil, &b58Pubkey, pwd)
-	fmt.Printf("%+v", decodePubkey)
+	payloadEncrypt, err := s.pascalClient.PayloadEncrypt(digest, payloadMethod, nil, nil, pwd)
+	fmt.Printf("%+v", *payloadEncrypt)
 	s.Assert().Nil(err, "Error has to be nil")
 }
 
+//FIND BUG
 func (s *TestSuite) TestPayloadDecrypt() {
-	var payload models.HexaString = "c000226120"
+	var payload string = "53616C7465645F5F54BC9CEB7A22536BFE58EB37498EA117C2DC4D2376170DCB"
 	var pwds []string = make([]string, 1)
 	pwds[0] = "1234"
-	decodePubkey, err := s.pascalClient.PayloadDecrypt(payload, pwds)
-	fmt.Printf("%+v", *decodePubkey)
+	payloadDecrypt, err := s.pascalClient.PayloadDecrypt(payload, pwds)
+	fmt.Printf("%+v", *payloadDecrypt)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestGetConnections() {
+	getConnections, err := s.pascalClient.GetConnections()
+	fmt.Printf("%+v", *getConnections)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestAddNewKey() {
+	ecNid := 714
+	name := "testtest"
+	newKey, err := s.pascalClient.AddNewKey(ecNid, name)
+	fmt.Printf("%+v", *newKey)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestLock() {
+	lock, err := s.pascalClient.Lock()
+	fmt.Println(lock)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestUnLock() {
+	pwd := "1234"
+	lock, err := s.pascalClient.UnLock(pwd)
+	fmt.Printf("%+v", lock)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestSetWalletPassword() {
+	pwd := "1234"
+	setPassword, err := s.pascalClient.SetWalletPassword(pwd)
+	fmt.Printf("%+v", setPassword)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestStopNode() {
+	nodeStop, err := s.pascalClient.StopNode()
+	fmt.Printf("%+v", nodeStop)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestStartNode() {
+	nodeStart, err := s.pascalClient.StartNode()
+	fmt.Printf("%+v", nodeStart)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestSignMessage() {
+	src := []byte("Hello Gopher!")
+
+	res := make([]byte, hex.EncodedLen(len(src)))
+	hex.Encode(res, src)
+
+	var b58Pubkey models.HexaString = s.myB58Key
+	//var encPubkey models.HexaString = s.myEncPubkey
+	digest := hex.EncodeToString(res)
+	messageSign, err := s.pascalClient.SignMessage(digest, nil, &b58Pubkey)
+	fmt.Printf("%+v", messageSign)
+	s.Assert().Nil(err, "Error has to be nil")
+}
+
+func (s *TestSuite) TestVerifySign() {
+	var b58Pubkey models.HexaString = s.myB58Key
+	//var encPubkey models.HexaString = s.myEncPubkey
+
+	src := []byte("Hello Gopher!")
+
+	//res := make([]byte, hex.EncodedLen(len(src)))
+	//hex.Encode(res, src)
+
+	digest := hex.EncodeToString(src)
+
+	messageSign, err := s.pascalClient.SignMessage(digest, nil, &b58Pubkey)
+	signature := messageSign["signature"]
+
+	VerifySign, err := s.pascalClient.VerifySign(digest, nil, &b58Pubkey, signature)
+	fmt.Printf("%+v", VerifySign)
 	s.Assert().Nil(err, "Error has to be nil")
 }
